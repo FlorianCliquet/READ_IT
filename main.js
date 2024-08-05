@@ -18,7 +18,8 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildPresences
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildMessageReactions
     ],
     /* Partials are used to get the full message content */
     partials: [Partials.Message, Partials.Channel, Partials.Reaction]
@@ -44,7 +45,7 @@ for (const file of commandFiles) {
 client.once('ready', () => {
     display_header();
     displayConnectionStatus(client);
-    schedule.scheduleJob('* * * * *', async () => {
+    schedule.scheduleJob('0 * * * *', async () => {
         await DailyPDF_Scheduler(client);
     });
 });
@@ -70,4 +71,24 @@ client.on('interactionCreate', async interaction => {
 });
 
 /* Login to the client */
-client.login(process.env.DISCORD_TOKEN);
+const loginWithRetry = async (client, token, retries = 10, delay = 3000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            await client.login(token);
+            return;
+        } catch (error) {
+            if (error.code === 'EAI_AGAIN') {
+                display_error_message('DNS resolution error. Retrying...');
+            } else {
+                display_error_message(`Login attempt ${i + 1} failed: ${error.message}`);
+            }
+            if (i === retries - 1) {
+                display_error_message('Failed to login after multiple attempts', error);
+                process.exit(1);
+            }
+            await new Promise(res => setTimeout(res, delay));
+        }
+    }
+};
+
+loginWithRetry(client, process.env.DISCORD_TOKEN);

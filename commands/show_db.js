@@ -1,4 +1,3 @@
-/*** IMPORT ****/
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder } = require('discord.js');
 const { fetchData } = require('../database/db');
@@ -69,15 +68,16 @@ module.exports = {
                 const filter = (reaction, user) => ['⬅️', '➡️'].includes(reaction.emoji.name) && !user.bot;
                 const collector = embedMessage.createReactionCollector({ filter, time: 60000 });
 
-                collector.on('collect', (reaction) => {
+                collector.on('collect', (reaction, user) => {
+                    reaction.users.remove(user);
+
                     if (reaction.emoji.name === '➡️') {
                         currentPage = (currentPage + 1) % totalPages;
                     } else if (reaction.emoji.name === '⬅️') {
                         currentPage = (currentPage - 1 + totalPages) % totalPages;
                     }
 
-                    embedMessage.edit({ embeds: [generateEmbed(currentPage)] });
-                    reaction.users.remove(reaction.users.cache.filter(user => !user.bot).first());
+                    embedMessage.edit({ embeds: [generateEmbed(currentPage)] }).catch(console.error);
                 });
 
                 collector.on('end', () => {
@@ -87,7 +87,7 @@ module.exports = {
 
             /* Log the command usage */
             displayCommands("show_db", interaction.user.tag, 0);
-            displayBlueMessage("The Database content has been showned. There is ", totalPages, " page(s).\n\n");
+            displayBlueMessage(`The Database content has been shown. There are ${totalPages} page(s).\n\n`);
             
         } catch (error) {
             display_error_message('Error executing command: ', error);
