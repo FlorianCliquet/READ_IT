@@ -29,6 +29,7 @@ const client = new Client({
 /* Set the commands property on the client */
 client.commands = new Collection();
 client.dailyPDFActive = (process.env.DAILY_PDF_ACTIVE === 'true');
+client.dailyLeetcodeActive = (process.env.DAILY_LEETCODE_ACTIVE === 'true');
 
 /* Read the command files */
 const commandsPath = path.join(__dirname, 'commands');
@@ -48,7 +49,7 @@ client.once('ready', () => {
     displayConnectionStatus(client);
     schedule.scheduleJob('* * * * *', async () => {
         await DailyPDF_Scheduler(client);
-        await daily_problem();
+        await daily_problem(client);
     });
 });
 

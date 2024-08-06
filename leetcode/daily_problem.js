@@ -1,36 +1,84 @@
-/* IMPORT */
-const dotenv = require('dotenv');
 const fs = require('fs');
+const { EmbedBuilder } = require('discord.js');
 const path = require('path');
-const { displayCommands , displayBlueMessage } = require('../helper/display_commands');
+const { displayCommands, displayBlueMessage } = require('../helper/display_commands');
 const { display_error_message } = require('../helper/display_error_message');
 
-/* Read the .env file */
-dotenv.config();
-const dailyPDFActive = process.env.DAILY_PDF_ACTIVE === 'true';
-
 /* Read the config file for the API URL */
-const configPath = path.resolve(__dirname, '../config.json');
-const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-const apiURL = config.API_DAILY_LEETCODE;
+let apiURL;
+try {
+    const configPath = path.resolve(__dirname, '../config.json');
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    apiURL = config.API_DAILY_LEETCODE;
+} catch (error) {
+    console.error('Error reading config file:', error);
+}
 
-async function daily_problem() {
+async function executeDailyLeetcode(interaction) {
     try {
-        displayCommands("Daily Problem", "", 1);
-        // Check if the daily PDF feature is active
-        if (!dailyPDFActive) {
-            display_error_message('The daily PDF feature is turned off.');
-            return;
+        const response = await fetch(apiURL);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
-
-        // Fetch the daily problem from the API
-        const response = await fetch(`${apiURL}`);
         const data = await response.json();
-        displayBlueMessage("The daily problem is: ", data.questionLink, "\n\n");
-        return data;
+
+        const embed = new EmbedBuilder()
+            .setColor('#6f42c1') // Purple color
+            .setTitle(`Daily Leetcode Problem: ${data.questionTitle}`)
+            .setURL(data.questionLink)
+            .setDescription(`[Click here to view the problem](${data.questionLink})`)
+            .setTimestamp()
+            .setFooter({ text: 'Leetcode Daily Problem' })
+            .addFields(
+                { name: 'Difficulty', value: data.difficulty, inline: true },
+                { name: 'Problem ID', value: data.questionId, inline: true },
+                { name: 'Paid Only', value: data.isPaidOnly ? 'Yes' : 'No', inline: true },
+                { name: 'Description', value: data.description ? data.description : 'No description available', inline: false },
+            )
+            .setAuthor({ name: 'Leetcode', iconURL: 'https://leetcode.com/static/images/LeetCode_logo_rvs.png', url: 'https://leetcode.com' })
+            .setThumbnail('https://leetcode.com/static/images/LeetCode_logo_rvs.png'); // Thumbnail for visual enhancement
+
+        displayCommands("turn_on_daily_leetcode", interaction, 1);
+        displayBlueMessage("Daily Leetcode feature has been turned on.\n");
+        displayBlueMessage("Daily Leetcode problem: ", data.questionTitle, "\n\n");
+        displayBlueMessage("Link: ", data.questionLink, "\n\n");
+
+        await interaction.reply({ content: '@everyone', embeds: [embed] });
     } catch (error) {
-        display_error_message('Error fetching data from the API: ', error);
-    }    
+        display_error_message('Error executing command: ', error);
+        await interaction.reply('There was an error while executing this command!');
+    }
+}
+
+async function daily_problem(client) {
+    const now = new Date();
+    const hours = now.getHours();
+
+    if (client.dailyLeetcodeActive && hours >= 8 && hours < 9) {
+        const command = client.commands.get('turn_on_daily_leetcode');
+        if (command) {
+            const channel = client.channels.cache.get(process.env.CHANNEL_LEETCODE_ID);
+            if (!channel) {
+                console.error('Channel not found!');
+                return;
+            }
+
+            const fakeInteraction = {
+                client,
+                commandName: 'turn_on_daily_leetcode',
+                channel: channel,
+                reply: async (message) => {
+                    fakeInteraction.channel.send(message);
+                }
+            };
+
+            try {
+                await executeDailyLeetcode(fakeInteraction);
+            } catch (error) {
+                console.error('Error executing daily Leetcode command:', error);
+            }
+        }
+    }
 }
 
 module.exports = { daily_problem };
