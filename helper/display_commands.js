@@ -16,7 +16,7 @@ async function displayCommands(commands_Name, user, type) {
     }    
 }
 
-async function displayBlueMessage(before, message, after) {
+async function displayBlueMessage(before="", message="", after="") {
     const { blue } = (await import('chalk')).default;
     console.log(
         before + 
