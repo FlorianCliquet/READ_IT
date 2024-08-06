@@ -8,6 +8,7 @@ const { DailyPDF_Scheduler } = require('./helper/executeDailyPDF');
 const { display_header } = require('./helper/display_header');
 const { displayConnectionStatus } = require('./helper/displayConnectionStatus');
 const { display_error_message } = require('./helper/display_error_message');
+const { daily_problem } = require('./leetcode/daily_problem');
 
 /* Create a new client */
 const client = new Client({
@@ -45,8 +46,9 @@ for (const file of commandFiles) {
 client.once('ready', () => {
     display_header();
     displayConnectionStatus(client);
-    schedule.scheduleJob('0 * * * *', async () => {
+    schedule.scheduleJob('* * * * *', async () => {
         await DailyPDF_Scheduler(client);
+        await daily_problem();
     });
 });
 
