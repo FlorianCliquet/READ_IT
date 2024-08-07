@@ -67,7 +67,7 @@ async function daily_problem(client) {
     const now = new Date();
     const hours = now.getHours();
 
-    if (client.dailyLeetcodeActive && hours >= 8 && hours < 9) {
+    if (client.dailyLeetcodeActive && hours >= 1 && hours < 2) {
         const command = client.commands.get('turn_on_daily_leetcode');
         if (command) {
             const channel = client.channels.cache.get(process.env.CHANNEL_LEETCODE_ID);
