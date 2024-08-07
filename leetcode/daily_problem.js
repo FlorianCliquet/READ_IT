@@ -15,38 +15,51 @@ try {
 }
 
 async function executeDailyLeetcode(interaction) {
-    try {
-        const response = await fetch(apiURL);
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+    const maxRetries = 5;
+    let attempt = 0;
+    let success = false;
+
+    while (attempt < maxRetries && !success) {
+        try {
+            const response = await fetch(apiURL);
+            if (!response.ok) {
+                display_error_message('Network response was not ok');
+            }
+            const data = await response.json();
+
+            const embed = new EmbedBuilder()
+                .setColor('#6f42c1')
+                .setTitle(`Daily Leetcode Problem: ${data.questionTitle}`)
+                .setURL(data.questionLink)
+                .setDescription(`[Click here to view the problem](${data.questionLink})`)
+                .setTimestamp()
+                .setFooter({ text: 'Leetcode Daily Problem' })
+                .addFields(
+                    { name: 'Difficulty', value: data.difficulty, inline: true },
+                    { name: 'Problem ID', value: data.questionId, inline: true },
+                    { name: 'Paid Only', value: data.isPaidOnly ? 'Yes' : 'No', inline: true },
+                    { name: 'Description', value: data.description ? data.description : 'No description available', inline: false },
+                )
+                .setAuthor({ name: 'Leetcode', iconURL: 'https://leetcode.com/static/images/LeetCode_logo_rvs.png', url: 'https://leetcode.com' })
+                .setThumbnail('https://leetcode.com/static/images/LeetCode_logo_rvs.png'); // Thumbnail for visual enhancement
+
+            displayCommands("turn_on_daily_leetcode", interaction, 1);
+            displayBlueMessage("Daily Leetcode feature has been turned on.\n");
+            displayBlueMessage("Daily Leetcode problem: ", data.questionTitle, "\n\n");
+            displayBlueMessage("Link: ", data.questionLink, "\n\n");
+
+            await interaction.reply({ content: '@everyone', embeds: [embed] });
+
+            success = true;
+        } catch (error) {
+            attempt++;
+            if (attempt === maxRetries) {
+                display_error_message('Error executing command: ', error);
+                await interaction.reply('There was an error while executing this command!');
+            } else {
+                displayBlueMessage('Error fetching data. Retrying... (Attempt ', `${attempt}/${maxRetries}`, ')');
+            }
         }
-        const data = await response.json();
-
-        const embed = new EmbedBuilder()
-            .setColor('#6f42c1') // Purple color
-            .setTitle(`Daily Leetcode Problem: ${data.questionTitle}`)
-            .setURL(data.questionLink)
-            .setDescription(`[Click here to view the problem](${data.questionLink})`)
-            .setTimestamp()
-            .setFooter({ text: 'Leetcode Daily Problem' })
-            .addFields(
-                { name: 'Difficulty', value: data.difficulty, inline: true },
-                { name: 'Problem ID', value: data.questionId, inline: true },
-                { name: 'Paid Only', value: data.isPaidOnly ? 'Yes' : 'No', inline: true },
-                { name: 'Description', value: data.description ? data.description : 'No description available', inline: false },
-            )
-            .setAuthor({ name: 'Leetcode', iconURL: 'https://leetcode.com/static/images/LeetCode_logo_rvs.png', url: 'https://leetcode.com' })
-            .setThumbnail('https://leetcode.com/static/images/LeetCode_logo_rvs.png'); // Thumbnail for visual enhancement
-
-        displayCommands("turn_on_daily_leetcode", interaction, 1);
-        displayBlueMessage("Daily Leetcode feature has been turned on.\n");
-        displayBlueMessage("Daily Leetcode problem: ", data.questionTitle, "\n\n");
-        displayBlueMessage("Link: ", data.questionLink, "\n\n");
-
-        await interaction.reply({ content: '@everyone', embeds: [embed] });
-    } catch (error) {
-        display_error_message('Error executing command: ', error);
-        await interaction.reply('There was an error while executing this command!');
     }
 }
 
