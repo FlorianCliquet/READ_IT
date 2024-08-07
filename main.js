@@ -47,7 +47,7 @@ for (const file of commandFiles) {
 client.once('ready', () => {
     display_header();
     displayConnectionStatus(client);
-    schedule.scheduleJob('* * * * *', async () => {
+    schedule.scheduleJob('0 * * * *', async () => {
         await DailyPDF_Scheduler(client);
         await daily_problem(client);
     });

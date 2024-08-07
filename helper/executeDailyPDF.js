@@ -134,7 +134,7 @@ async function DailyPDF_Scheduler(client) {
     const hours = now.getHours();
 
     /* If the daily PDF feature is active and the time is between 8 AM and 9 AM */
-    if (client.dailyPDFActive && hours >= 1 && hours < 2) {
+    if (client.dailyPDFActive && hours >= 8 && hours < 9) {
         const command = client.commands.get('turn_on_daily_pdf');
         if (command) {
             /* fakeInteraction is an object that mimics the interaction object */
