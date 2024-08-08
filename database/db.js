@@ -149,5 +149,43 @@ async function Check_If_There_is_pdf_in_db() {
     });
 }
 
+async function add_leetcode_account(Leetcode_account, Discord_user, callback) {
+    const conn = getDbConnection();
+    const query = 'INSERT INTO LEETCODE (Leetcode_account, Discord_user) VALUES (?, ?)';
 
-module.exports = { Check_If_the_pdf_exist_in_db, addData, fetchData, deleteData, fetchPDF_Name_with_count_0, updatePDF_Count, setEveryPDF_Count_to_0 , Check_If_There_is_pdf_in_db};
+    conn.query(query, [Leetcode_account, Discord_user], (error, results) => {
+        conn.end();
+        if (error) {
+            return callback(error);
+        }
+        callback(null, results);
+    });
+}
+
+async function fetch_leetcode_accounts() {
+    return new Promise((resolve, reject) => {
+        const conn = getDbConnection();
+        const query = 'SELECT Leetcode_account as name, Discord_user as id FROM LEETCODE ORDER BY Leetcode_account';
+
+        conn.query(query, (error, results) => {
+            conn.end();
+            if (error) {
+                reject(error);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+}
+
+module.exports = { Check_If_the_pdf_exist_in_db,
+                 addData, 
+                fetchData, 
+                deleteData, 
+                fetchPDF_Name_with_count_0, 
+                updatePDF_Count, 
+                setEveryPDF_Count_to_0, 
+                Check_If_There_is_pdf_in_db,
+                add_leetcode_account,
+                fetch_leetcode_accounts
+            };

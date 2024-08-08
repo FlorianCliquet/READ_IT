@@ -21,7 +21,7 @@ async function executeDailyLeetcode(interaction) {
 
     while (attempt < maxRetries && !success) {
         try {
-            const response = await fetch(apiURL);
+            const response = await fetch(apiURL + '/');
             if (!response.ok) {
                 display_error_message('Network response was not ok');
             }
@@ -44,7 +44,6 @@ async function executeDailyLeetcode(interaction) {
                 .setThumbnail('https://leetcode.com/static/images/LeetCode_logo_rvs.png'); // Thumbnail for visual enhancement
 
             displayCommands("turn_on_daily_leetcode", interaction, 1);
-            displayBlueMessage("Daily Leetcode feature has been turned on.\n");
             displayBlueMessage("Daily Leetcode problem: ", data.questionTitle, "\n\n");
             displayBlueMessage("Link: ", data.questionLink, "\n\n");
 

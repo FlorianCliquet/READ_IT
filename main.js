@@ -9,6 +9,7 @@ const { display_header } = require('./helper/display_header');
 const { displayConnectionStatus } = require('./helper/displayConnectionStatus');
 const { display_error_message } = require('./helper/display_error_message');
 const { daily_problem } = require('./leetcode/daily_problem');
+const { dailyRecap } = require('./leetcode/daily_recap');
 
 /* Create a new client */
 const client = new Client({
@@ -30,6 +31,7 @@ const client = new Client({
 client.commands = new Collection();
 client.dailyPDFActive = (process.env.DAILY_PDF_ACTIVE === 'true');
 client.dailyLeetcodeActive = (process.env.DAILY_LEETCODE_ACTIVE === 'true');
+client.dailyLeetcodeRecapActive = (process.env.DAILY_LEETCODE_RECAP_ACTIVE === 'true');
 
 /* Read the command files */
 const commandsPath = path.join(__dirname, 'commands');
@@ -48,6 +50,7 @@ client.once('ready', () => {
     display_header();
     displayConnectionStatus(client);
     schedule.scheduleJob('0 * * * *', async () => {
+        await dailyRecap(client);
         await DailyPDF_Scheduler(client);
         await daily_problem(client);
     });
